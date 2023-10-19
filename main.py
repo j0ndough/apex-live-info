@@ -48,9 +48,6 @@ def main():
         req = 'store'
         # json = make_request(req, param)
         print("No recolor information found.")
-    else:
-        print('error')
-        raise SystemExit
 
 
 def make_request(req, param):
