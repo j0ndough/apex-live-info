@@ -1,6 +1,7 @@
 # apex-live-info
 Script that grabs live info from [Apex Legends Status](https://apexlegendsstatus.com/).
-Currently supports crafting and map rotations.
+
+Currently supports crafting and map rotations, and current status of live matchmaking servers.
 
 May be repurposed into a Discord bot or something later, TBD.
 
@@ -10,17 +11,18 @@ First, register for an API key [here](https://apexlegendsapi.com/).
 
 Rename `config.cfg` to `api_config.cfg` and paste your API key into the `CLIENT_ID` field.
 
-Run `python main.py` with the appropriate arguments and options to get live info.
+Run `python main.py` with the appropriate argument to get live info.
 
 **Arguments**
 
-`-r <R>` or `--request <REQUEST>` : Specifies the desired live info request with a desired option.
+`-c` or `--crafting` : Gets current crafting rotation.
 
-Request options:
+`-m` or `--map` : Gets current map rotation for BR Pubs, BR Ranked, and Mixtape (Rotating LTM).
 
-`crafting` : Gets current crafting rotation.
+`-st` `--status` : Gets current status of live matchmaking servers for all regions.
 
-`map` : Gets current map rotation for BR Pubs, BR Ranked, and Mixtape (Rotating LTM).
+`-s` or `--store` : Gets the current recolor rotation from the in-game store. However, this is option
+is currently bugged and does not work.
 
 ### Example Argument
-`python main.py -r map` Gets the current map rotation (BR Pubs, BR Ranked, and rotating LTM).
+`python main.py -m` Gets the current map rotation (BR Pubs, BR Ranked, and rotating LTM).

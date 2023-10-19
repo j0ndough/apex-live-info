@@ -12,31 +12,45 @@ BASE_URL = 'https://api.mozambiquehe.re/'
 def main():
     # parse args
     parser = argparse.ArgumentParser()
-    parser.add_argument('-r', '--request', type=str,
-                        help='Specify the request type (crafting, map, or store)', required=True)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-c', '--crafting', action='store_true',
+                        help='Gets the current crafting rotation.')
+    group.add_argument('-m', '--map', action='store_true',
+                        help='Gets the current map rotation (BR Pubs/BR Ranked/Mixtape LTM).')
+    group.add_argument('-s', '--store', action='store_true',
+                        help='Gets the current recolor rotation in the store (currently bugged).')
+    group.add_argument('-st', '--status', action='store_true',
+                        help='Gets the current server status for Apex Legends.')
     args = parser.parse_args()
 
-    # check for valid args
-    if args.request:
-        param = ''
-        if 'crafting'.casefold() == args.request.casefold():
-            req = 'crafting'
-            json = make_request(req, param)
-            items = get_current_crafting(json)
-            print('Current Crafting Rotation:')
-            print_results(items, ' | ')
-        elif 'map'.casefold() == args.request.casefold():
-            req = 'maprotation'
-            param = 'version=2'
-            json = make_request(req, param)
-            maps = get_current_maps(json)
-            print('Current Map Rotation:')
-            print_results(maps, ': ')
-        elif 'store'.casefold() == args.request.casefold():
-            req = 'store'
-            # TODO
-        else:
-            raise ValueError('Invalid request type. Try crafting, map, or store.')
+    param = ''
+    if args.crafting:
+        req = 'crafting'
+        json = make_request(req, param)
+        items = get_current_crafting(json)
+        print('Current Crafting Rotation:')
+        print_results(items, ' | ')
+    elif args.map:
+        req = 'maprotation'
+        param = 'version=2'
+        json = make_request(req, param)
+        maps = get_current_maps(json)
+        print('Current Map Rotation:')
+        print_results(maps, ': ')
+    elif args.status:
+        req = 'servers'
+        json = make_request(req, param)
+        status = get_current_status(json)
+        print('Current matchmaking server status (provided by ALS):')
+        print_results(status, ' - ')
+    elif args.store:
+        # Retriving recolor information from the store is currently bugged
+        req = 'store'
+        # json = make_request(req, param)
+        print("No recolor information found.")
+    else:
+        print('error')
+        raise SystemExit
 
 
 def make_request(req, param):
@@ -73,10 +87,21 @@ def get_current_maps(json):
     return res
 
 
+# The store endpoint is currently bugged and does not return recolor information.
 def get_current_store(json):
     # TODO
+    # recolors = {}
+    # return recolors
     return None
 
+
+# Get current matchmaking server status for all regions.
+def get_current_status(json):
+    servers = json['EA_novafusion']
+    res = dict.fromkeys(['EU West', 'EU East', 'US West', 'US Central', 'US East', 'South America', 'Asia'])
+    for s, r in zip(servers, res):
+        res[r] = 'Status: ' + servers[s]['Status'] + ', Response Time: ' + str(servers[s]['ResponseTime']) + ' ms'
+    return res
 
 def print_results(res, spacer):
     for r in res:
