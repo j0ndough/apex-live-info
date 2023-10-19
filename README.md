@@ -19,10 +19,10 @@ Run `python main.py` with the appropriate argument to get live info.
 
 `-m` or `--map` : Gets current map rotation for BR Pubs, BR Ranked, and Mixtape (Rotating LTM).
 
-`-st` `--status` : Gets current status of live matchmaking servers for all regions.
-
 `-s` or `--store` : Gets the current recolor rotation from the in-game store. However, this is option
 is currently bugged and does not work.
+
+`-st` `--status` : Gets current status of live matchmaking servers for all regions.
 
 ### Example Argument
 `python main.py -m` Gets the current map rotation (BR Pubs, BR Ranked, and rotating LTM).
