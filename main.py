@@ -1,7 +1,7 @@
 import argparse
+import asyncio
 import configparser
-import requests
-from requests.exceptions import HTTPError
+import httpx
 
 # get API key
 config = configparser.ConfigParser()
@@ -23,48 +23,49 @@ def main():
                         help='Gets the current server status for Apex Legends.')
     args = parser.parse_args()
 
-    param = ''
+    param = {}
     if args.crafting:
         req = 'crafting'
-        json = make_request(req, param)
+        json = asyncio.run(make_request(req, param))
         items = get_current_crafting(json)
         print('Current Crafting Rotation:')
         print_results(items, ' | ')
     elif args.map:
         req = 'maprotation'
-        param = 'version=2'
-        json = make_request(req, param)
+        param['version'] = '2'
+        json = asyncio.run(make_request(req, param))
         maps = get_current_maps(json)
         print('Current Map Rotation:')
         print_results(maps, ': ')
     elif args.status:
         req = 'servers'
-        json = make_request(req, param)
+        json = asyncio.run(make_request(req, param))
         status = get_current_status(json)
         print('Current matchmaking server status (provided by ALS):')
         print_results(status, ' - ')
     elif args.store:
         # Retriving recolor information from the store is currently bugged
         req = 'store'
-        # json = make_request(req, param)
+        # json = asyncio.run(make_request(req, param))
         print("No recolor information found.")
 
 
-def make_request(req, param):
+async def make_request(req: str, params: dict) -> dict:
     try:
-        response = requests.get(BASE_URL + req + auth, params=param)
-        response.raise_for_status()
-        json_response = response.json()
-        return json_response
-    except HTTPError as http_err:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(BASE_URL + req + auth, params=params)
+            response.raise_for_status()
+            json_response = response.json()
+            return json_response
+    except httpx.HTTPError as http_err:
         print(http_err)
         raise SystemError
-    except requests.exceptions.RequestException:
-        print('Other error occurred. Please try again.')
-        raise SystemExit
+    except Exception as e:
+        print('Other error occurred. ' + e + '. Please try again.')
+        raise SystemError
 
 
-def get_current_crafting(json):
+def get_current_crafting(json: dict) -> dict:
     items = {}
     for j in json:
         for b in j['bundleContent']:
@@ -76,7 +77,7 @@ def get_current_crafting(json):
     return items
 
 
-def get_current_maps(json):
+def get_current_maps(json: dict) -> dict:
     res = {}
     res['BR Pubs'] = json['battle_royale']['current']['map']
     res['BR Ranked'] = json['ranked']['current']['map']
@@ -85,7 +86,7 @@ def get_current_maps(json):
 
 
 # The store endpoint is currently bugged and does not return recolor information.
-def get_current_store(json):
+def get_current_store(json: dict) -> dict:
     # TODO
     # recolors = {}
     # return recolors
@@ -93,28 +94,28 @@ def get_current_store(json):
 
 
 # Get current matchmaking server status for all regions.
-def get_current_status(json):
+def get_current_status(json: dict) -> dict:
     servers = json['EA_novafusion']
     res = dict.fromkeys(['EU West', 'EU East', 'US West', 'US Central', 'US East', 'South America', 'Asia'])
     for s, r in zip(servers, res):
         res[r] = 'Status: ' + servers[s]['Status'] + ', Response Time: ' + str(servers[s]['ResponseTime']) + ' ms'
     return res
 
-def print_results(res, spacer):
+def print_results(res: dict, spacer: str):
     for r in res:
         print(r + spacer + res[r])
 
 
 # Custom function that capitalizes the first letter of every word.
 # Compared to other similar functions, this one does not alter the capitalization of other letters.
-def capitalize_string(str):
+def capitalize_string(str: str) -> str:
     words = str.split()
     cap_words = [capitalize_first_letter(word) for word in words]
     return ' '.join(cap_words)
 
 
 # Capitalizes first letter of a word, but leaves the rest untouched.
-def capitalize_first_letter(word):
+def capitalize_first_letter(word: str) -> str:
     if word:
         return word[:1].upper() + word[1:]
     else:  # in case input is empty
